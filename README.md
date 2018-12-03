@@ -96,22 +96,46 @@ let o4 = produce(target, draft => {
 
 #### produce
 
+`import produce from "immer"`
+or
+`import { produce } from "immer"`
+
 第1种使用方式：
 `produce(currentState, producer: (draftState) => any): nextState`
 
 第2种使用方式：
 `produce(producer: (draftState) => any)(currentState): nextState`
 
+##### producer 的 返回值
 
+`produce(currentState, producer: (draftState) => any): nextState`
+
+
+##### producer 的 this
+
+```javascript
+produce(currentState, function(){
+  // 此处，this 指向 draftState
+  this.a = 1;
+})
+```
+
+
+
+#### applyPatches
+
+`import produce, {applyPatches} from "immer"`
+
+`applyPatches(currentState, changes: patches[]): nextState`
 
 
 更多说明，请移步[官方文档](https://github.com/mweststrate/immer)
 
 
-## 从零实现immer
-
-
 ## immer在react项目中的应用
+
+
+## 从零实现immer
 
 
 ## immer源码分析
