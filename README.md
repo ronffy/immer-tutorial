@@ -5,7 +5,7 @@
 ## 介绍
 
 [immer](https://github.com/mweststrate/immer) 是 mobx 的作者写的一个 immutable 库，核心实现是利用 ES6 的 proxy。
-immer 极易上手，常用 api 就那么几个，且使用方式非常舒服，相信你一定会喜欢上它的。
+immer 极易上手，常用 api 就那么几个，使用方式也非常舒服，相信你一定会喜欢上它的。
 
 
 ## 以往,关于数据处理,有哪些不爽的地方
@@ -187,11 +187,9 @@ produce(currentState, function(draft){
 })
 ```
 
-#### patch补丁
+#### 通过patch功能,实现时间旅行
 
-`immer`可以通过`patch`功能，实现时间旅行。
-
-immer 中，一个补丁对象是怎么样的:
+immer 中，一个patch对象是这样的:
 ```typescript
 interface Patch {
   op: "replace" | "remove" | "add" // 每次更改的动作类型
@@ -204,7 +202,8 @@ interface Patch {
 ```typescript
 produce(
   currentState, 
-  recipe, 
+  recipe,
+  // 通过 patchListener 函数，暴露时间旅行需要的参数
   patchListener: (patches: Patch[], inversePatches: Patch[]) => void
 )
 
