@@ -2,125 +2,78 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import { createStore } from 'redux';
-import { connect } from 'react-redux';
+import { Provider, connect } from 'react-redux';
 
 import produce, { applyPatches } from 'immer';
 
-
-let state = {
-  p: {
-    x: [1, 2]
-  }
-}
-
-let fork = state;
-
-
-let changes = [];
-let inverseChanges = [];
-
-
-fork = produce(
-  fork,
-  draft => {
-    draft.p.x.push(3);
-    draft.x = 4;
-  },
-  (patched, inversePatches) => {
-    changes.push(...patched)
-    inverseChanges.push(...inversePatches)
-  }
-)
-
-state = produce(state, draft => {
-  draft.p.x.push(5);
-})
-
-console.log('changes: %o, inverseChanges: %o', changes, inverseChanges);
-
-console.log('state: %o', state);
-
-state = applyPatches(state, changes);
-
-console.log('state: %o', state);
-
-state = applyPatches(state, inverseChanges);
-
-console.log('state: %o', state);
-
-
-
-let target2 = {
-  p: {
-    x: 1
-  }
-}
-
-let p = {}
-
-let producer = produce(function (draft, arg){
-  console.log('p:', p === arg);
-})
-
-let o2 = producer(target2, p);
-
-
-
-
-
-
-
-
-{
-  let state = {
-    x: 1
-  }
-
-  let adds = [];
-  let inverseRemoves = [];
-
-  state = produce(
-    state,
-    draft => {
-      draft.x = 2;
-      draft.y = 2;
-    },
-    (patches, inversePatches) => {
-      adds = patches.filter(patch => patch.op === 'replace');
-      inverseRemoves = inversePatches.filter(patch => patch.op === 'replace');
+const state = {
+  members: [
+    {
+      name: 'ronffy',
+      age: 30
     }
-  )
-
-  console.log('adds', adds);
-  console.log('inverseRemoves', inverseRemoves);
-  
-
-  state = produce(state, draft => {
-    draft.x = 3;
-  })
-  console.log('state1', state);
-  
-  state = applyPatches(state, adds);
-  console.log('state2', state);
-
-  state = produce(state, draft => {
-    draft.x = 4;
-  })
-  console.log('state3', state);
-
-  state = applyPatches(state, inverseRemoves);
-  console.log('state4', state);
+  ]
 }
 
-// @connect
+// const reducer = (state, action) => {
+//   switch (action.type) {
+//     case 'ADD_AGE':
+//       const { members } = state;
+//       return {
+//         ...state,
+//         members: [
+//           {
+//             ...members[0],
+//             age: members[0].age + 1,
+//           },
+//           ...members.slice(1),
+//         ]
+//       }
+//     default:
+//       return state
+//   }
+// }
+
+const reducer = (state, action) => produce(state, draft => {
+  switch (action.type) {
+    case 'ADD_AGE':
+      draft.members[0].age++;
+  }
+})
+
+// const reducer = produce((draft, action) => {
+//   switch (action.type) {
+//     case 'ADD_AGE':
+//       draft.members[0].age++;
+//   }
+// })
+
+
+// const reducer = produce((draft, action) => {
+//   switch (action.type) {
+//     case 'ADD_AGE':
+//       draft.members[0].age++;
+//   }
+// })
+
+const store = createStore(reducer, state)
+
+@connect(({ members }) => ({ members }))
 class C extends React.Component {
+  handleClick = () => {
+    this.props.dispatch({
+      type: 'ADD_AGE'
+    })
+  }
   render() {
     const { members } = this.props;
+    
     if (!members || !members.length) {
       return null;
     }
     return (
       <div>
+        <button onClick={this.handleClick}>点我</button>
         {
           members.map(({ name, age }) => <span key={age}>{name}: {age}</span>)
         }
@@ -131,8 +84,11 @@ class C extends React.Component {
 
 
 
-
 ReactDOM.render(
-  <C />,
+  (
+    <Provider store={store}>
+      <C />
+    </Provider>
+  ),
   document.getElementById('root')
 )

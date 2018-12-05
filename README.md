@@ -331,29 +331,6 @@ console.log('state4', state); // { x: 1, y: 2 }
 
 ## 用immer优化react项目的探索
 
-既然 Immer 这么好用，那么是否可以在 React 项目中大展身手呢，答案是肯定的。
-
-在开始正式探索之前，我们先来看下 produce [第2种使用方式](#第2种使用方式)的拓展用法:
-
-例子：
-```js
-let obj = {};
-
-let producer = produce((draft, arg) => {
-  obj === arg; // true
-});
-let nextState = producer(currentState, obj);
-```
-
-相比 produce 第2种使用方式的例子，多定义了一个`obj`对象，并将其作为 producer 方法的第2个参数传了进去；可以看到， produce 内的 recipe 回调函数的第2个参数与`obj`对象是指向同一块内存。  
-ok，我们在知道了 produce 的这种拓展用法后，看看能够在 React 中发挥什么功效。
-
-### 优化setState方法
-
-#### 回顾setState
-
-先简单回顾下，`setState`方法在 React 中的使用：  
-
 首先定义一个`state`对象，后面的例子使用到变量`state`或访问`this.state`时，如无特殊声明，都是指这个`state`对象
 ```js
 state = {
@@ -366,9 +343,11 @@ state = {
 }
 ```
 
+### 优化setState方法
+
 #### 抛出需求
 
-就这个`state`，我们先抛一个需求出来，好让后面的讲解有的放矢： *members 成员中的第1个成员，年龄长了1岁*
+就上面定义的`state`，我们先抛一个需求出来，好让后面的讲解有的放矢： **members 成员中的第1个成员，年龄增加1岁**
 
 #### 错误示例
 
@@ -425,7 +404,72 @@ this.setState(produce(draft => {
 
 ### 优化reducer
 
+#### immer的produce的拓展用法
 
+在开始正式探索之前，我们先来看下 produce [第2种使用方式](#第2种使用方式)的拓展用法:
+
+例子：
+```js
+let obj = {};
+
+let producer = produce((draft, arg) => {
+  obj === arg; // true
+});
+let nextState = producer(currentState, obj);
+```
+
+相比 produce 第2种使用方式的例子，多定义了一个`obj`对象，并将其作为 producer 方法的第2个参数传了进去；可以看到， produce 内的 recipe 回调函数的第2个参数与`obj`对象是指向同一块内存。  
+ok，我们在知道了 produce 的这种拓展用法后，看看能够在 Redux 中发挥什么功效?
+
+#### 普通reducer怎样解决上面抛出的需求
+
+```js
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'ADD_AGE':
+      const { members } = state;
+      return {
+        ...state,
+        members: [
+          {
+            ...members[0],
+            age: members[0].age + 1,
+          },
+          ...members.slice(1),
+        ]
+      }
+    default:
+      return state
+  }
+}
+```
+
+#### 集合immer,reducer可以怎样写
+
+```js
+const reducer = (state, action) => produce(state, draft => {
+  switch (action.type) {
+    case 'ADD_AGE':
+      draft.members[0].age++;
+  }
+})
+```
+
+可以看到，通过 produce ，我们的代码量已经精简了很多；  
+不过仔细观察不难发现，利用 produce 能够先制造出 producer 的特点，代码还能更优雅：
+
+```js
+const reducer = produce((draft, action) => {
+  switch (action.type) {
+    case 'ADD_AGE':
+      draft.members[0].age++;
+  }
+})
+```
+
+好了，至此，Immer 优化 reducer 的方法也讲解完毕。
+
+Immer 的使用非常灵活，多多思考，相信你还可以发现 Immer 更多其他的妙用！
 
 
 ## 参考文档

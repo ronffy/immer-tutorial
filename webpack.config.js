@@ -69,9 +69,9 @@ module.exports = function (err) {
                 ["@babel/plugin-proposal-class-properties", { "loose": true }],
                 [
                   '@babel/plugin-transform-runtime',
-                  {
-                    "corejs": 2
-                  }
+                  // {
+                  //   "corejs": 2
+                  // }
                 ],
               ]
             },
