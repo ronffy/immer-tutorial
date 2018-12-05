@@ -4,8 +4,8 @@
 
 ## 介绍
 
-[immer](https://github.com/mweststrate/immer) 是 mobx 的作者写的一个 immutable 库，核心实现是利用 ES6 的 proxy。  
-immer 极易上手，常用 api 就那么几个，使用方式也非常舒服，相信你一定会喜欢上它的。
+[Immer](https://github.com/mweststrate/immer) 是 mobx 的作者写的一个 immutable 库，核心实现是利用 ES6 的 proxy。  
+Immer 极易上手，常用 api 就那么几个，使用方式也非常舒服，相信你一定会喜欢上它的。
 
 
 ## 以往,关于数据处理,有哪些不爽的地方
@@ -49,10 +49,10 @@ o4.p.x.push(1); // currentState 被修改了
 
 ### 一般情况下，解决引用类型对象被修改的办法
 
-1. 深度拷贝，但是深拷贝的成本实在太高；
-2. immutable.js，非常棒的一个不可变数据结构的库，今天之所以不推荐它而是选择 immer 的最主要原因是，immer 更小巧，更易上手。
+1. 深度拷贝，但是深拷贝的成本较高，会影响性能；
+2. [ImmutableJS](https://github.com/facebook/immutable-js)，非常棒的一个不可变数据结构的库，可以解决上面的问题，But，跟 Immer 比起来，ImmutableJS 有两个较大的不足：第一是需要使用者学习它的数据结构操作方式，没有 Immer 提供的使用原生对象的操作方式简单、易用；第二：它的操作结果需要通过`toJS`方法才能得到原生对象，这使得在操作一个对象的时候，时刻要主要操作的是原生对象还是 ImmutableJS 的返回结果，稍不注意，就会产生意想不到的 bug。
 
-看来目前已知的解决方案，我们都不甚满意，那么 immer 又有什么高明之处呢？
+看来目前已知的解决方案，我们都不甚满意，那么 Immer 又有什么高明之处呢？
 
 ### 安装immer
 
@@ -89,12 +89,12 @@ let o4 = produce(currentState, draft => {
 })
 ```
 
-是不是使用非常简单，通过小试牛刀，我们简单的了解了 immer ，下面将对 immer 的常用 api 分别进行介绍。
+是不是使用非常简单，通过小试牛刀，我们简单的了解了 Immer ，下面将对 Immer 的常用 api 分别进行介绍。
 
 
 ### 概念说明
 
-immer 涉及概念不多，在此将涉及到的概念先行罗列出来，阅读本文章过程中遇到不明白的概念，可以随时来此处查阅。
+Immer 涉及概念不多，在此将涉及到的概念先行罗列出来，阅读本文章过程中遇到不明白的概念，可以随时来此处查阅。
 
 - currentState  
   被操作对象的最初状态
@@ -119,7 +119,7 @@ immer 涉及概念不多，在此将涉及到的概念先行罗列出来，阅�
 
 #### produce
 
-> 备注：出现`PatchListener`先行跳过，后面章节会做介绍
+*备注：出现`PatchListener`先行跳过，后面章节会做介绍*
 
 `import produce from "immer"`  
 or  
@@ -141,14 +141,41 @@ currentState === nextState; // true
 
 例子2：
 ```typescript
+let currentState = {
+  a: [],
+  p: {
+    x: 1
+  }
+}
+
 let nextState = produce(currentState, (draft) => {
-  draft.p.x.push(1);
+  draft.a.push(2);
 })
 
-currentState.p.x !== nextState.p.x; // true
+currentState.a === nextState.a; // false
+currentState.p === nextState.p; // true
+```
+
+由此可见，对`draftState`的修改都会反应到`nextState`上，而 Immer 使用的结构是共享的，`nextState`在结构上又与`currentState`共享未修改的部分，共享效果如图(借用的一篇 Immutable 文章中的动图，侵删)：
+
+![](./assets/change-tree.gif)
+
+##### 自动冻结功能
+
+Immer 还在内部做了一件很巧妙的事情，那就是通过`produce`生成的`nextState`是被冻结（freeze）的，（Immer 内部使用`Object.freeze`方法，只冻结`nextState`跟`currentState`相比修改的部分），这样，当直接修改`nextState`时，将会报错。
+这使得`nextState`成为了真正的不可变数据。
+
+例子：
+```typescript
+let nextState = produce(currentState, (draft) => {
+  draft.p.x.push(2);
+})
+
+currentState === nextState; // true
 ```
 
 ##### 第2种使用方式
+
 利用高阶函数的特点，提前生成一个生产者`producer`
 
 语法：
@@ -161,6 +188,7 @@ let producer = produce((draft) => {
 });
 let nextState = producer(currentState);
 ```
+
 
 ##### recipe的返回值
 
@@ -181,7 +209,7 @@ let nextState = produce(
 
 此时，`nextState`不再是通过`draftState`生成的了，而是通过`recipe`的返回值生成的。
 
-注意，`recipe`无返回值时，通过`produce`生成的`nextState`是 frozen（冻结）的，不可被修改的
+*注意，`recipe`无返回值时，通过`produce`生成的`nextState`是  freeze（冻结）的，不可被修改的*
 
 ##### recipe中的this
 
@@ -199,7 +227,7 @@ produce(currentState, function(draft){
 
 通过此功能，可以方便进行详细的代码调试和跟踪，可以知道`recipe`内的做的每次修改，还可以实现时间旅行。
 
-immer 中，一个patch对象是这样的:
+Immer 中，一个 patch 对象是这样的:
 ```typescript
 interface Patch {
   op: "replace" | "remove" | "add" // 一次更改的动作类型
@@ -298,14 +326,14 @@ console.log('state4', state); // { x: 1, y: 2 }
 
 可见，`patchListener`内部对数据操作做了记录，并分别存储为正向操作记录和反向操作记录，供我们使用。
 
+至此，Immer 的常用功能和 api 我们就介绍完了。
 
-至此，`immer`的常用功能和 api 我们就介绍完了。
+接下来，我们看如何用 Immer ，提高 React 、Redux 项目的开发效率。
 
-接下来，我们看下使用`immer`，如何提高`react`、`redux`项目的开发效率。
 
 ## 用immer优化react项目的探索
 
-既然`immer`这么好用，那么是否可以在`react`项目中大展身手呢，答案是肯定的。
+既然 Immer 这么好用，那么是否可以在 React 项目中大展身手呢，答案是肯定的。
 
 
 
