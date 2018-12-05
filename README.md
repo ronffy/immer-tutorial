@@ -4,7 +4,7 @@
 
 ## 介绍
 
-[immer](https://github.com/mweststrate/immer) 是 mobx 的作者写的一个 immutable 库，核心实现是利用 ES6 的 proxy。
+[immer](https://github.com/mweststrate/immer) 是 mobx 的作者写的一个 immutable 库，核心实现是利用 ES6 的 proxy。  
 immer 极易上手，常用 api 就那么几个，使用方式也非常舒服，相信你一定会喜欢上它的。
 
 
@@ -96,22 +96,22 @@ let o4 = produce(currentState, draft => {
 
 immer 涉及概念不多，在此将涉及到的概念先行罗列出来，阅读本文章过程中遇到不明白的概念，可以随时来此处查阅。
 
-- currentState
+- currentState  
   被操作对象的最初状态
 
-- draftState
-  根据`currentState`生成的草稿状态
+- draftState  
+  根据`currentState`生成的草稿状态，它是`currentState`的代理，对`draftState`所做的任何修改都将被记录并用于生成`nextState`。在此过程中，`currentState`将不受影响
 
-- nextState
+- nextState  
   根据`draftState`生成的最终状态
 
-- produce 生产
+- produce 生产  
   用来生成`nextState`或`producer`的函数
 
-- producer 生产者
+- producer 生产者  
   通过`produce`生成，用来生产`nextState`，每次执行相同的操作
 
-- recipe 生产机器
+- recipe 生产机器  
   用来操作`draftState`的函数
 
 
@@ -121,16 +121,25 @@ immer 涉及概念不多，在此将涉及到的概念先行罗列出来，阅�
 
 > 备注：出现`PatchListener`先行跳过，后面章节会做介绍
 
-`import produce from "immer"`
-or
-`import { produce } from "immer"`
+`import produce from "immer"`  
+or  
+`import { produce } from "immer"`  
 
 ##### 第1种使用方式：
 
 语法：
 `produce(currentState, recipe: (draftState) => void | draftState, ?PatchListener): nextState`
 
-例子：
+例子1：
+```typescript
+let nextState = produce(currentState, (draft) => {
+
+})
+
+currentState === nextState; // true
+```
+
+例子2：
 ```typescript
 let nextState = produce(currentState, (draft) => {
   draft.p.x.push(1);
@@ -155,9 +164,9 @@ let nextState = producer(currentState);
 
 ##### recipe的返回值
 
-`recipe`是否有返回值，`nextState`的生成过程是不同的：
-`recipe`没有返回值时：`nextState`根据`recipe`函数内的`draftState`生成的；
-`recipe`有返回值时：`nextState`根据`recipe`函数的返回值生成的；
+`recipe`是否有返回值，`nextState`的生成过程是不同的：  
+`recipe`没有返回值时：`nextState`根据`recipe`函数内的`draftState`生成的；  
+`recipe`有返回值时：`nextState`根据`recipe`函数的返回值生成的；  
 
 ```typescript
 let nextState = produce(
@@ -170,14 +179,13 @@ let nextState = produce(
 )
 ```
 
-此时，`nextState`不再是通过`draftState`生成的了，
-而是通过`recipe`的返回值生成的。
+此时，`nextState`不再是通过`draftState`生成的了，而是通过`recipe`的返回值生成的。
 
 注意，`recipe`无返回值时，通过`produce`生成的`nextState`是 frozen（冻结）的，不可被修改的
 
 ##### recipe中的this
 
-`recipe`函数内部的`this`指向`draftState`，也就是修改`this`与修改`recipe`的参数`draftState`，效果是一样的。
+`recipe`函数内部的`this`指向`draftState`，也就是修改`this`与修改`recipe`的参数`draftState`，效果是一样的。  
 !!注意：此处的`recipe`函数不能是箭头函数，如果是箭头函数，`this`就无法指向`draftState`了。
 
 ```javascript
@@ -187,14 +195,16 @@ produce(currentState, function(draft){
 })
 ```
 
-#### 通过patch功能,实现时间旅行
+#### patch补丁功能
+
+通过此功能，可以方便进行详细的代码调试和跟踪，可以知道`recipe`内的做的每次修改，还可以实现时间旅行。
 
 immer 中，一个patch对象是这样的:
 ```typescript
 interface Patch {
-  op: "replace" | "remove" | "add" // 每次更改的动作类型
+  op: "replace" | "remove" | "add" // 一次更改的动作类型
   path: (string | number)[] // 此属性指从树根到被更改树杈的路径
-  value?: any // replace、add 才有此值，表示新的赋值
+  value?: any // op为 replace、add 时，才有此属性，表示新的赋值
 }
 ```
 
@@ -203,7 +213,7 @@ interface Patch {
 produce(
   currentState, 
   recipe,
-  // 通过 patchListener 函数，暴露时间旅行需要的参数
+  // 通过 patchListener 函数，暴露正向和反向的补丁数组
   patchListener: (patches: Patch[], inversePatches: Patch[]) => void
 )
 
@@ -288,11 +298,15 @@ console.log('state4', state); // { x: 1, y: 2 }
 
 可见，`patchListener`内部对数据操作做了记录，并分别存储为正向操作记录和反向操作记录，供我们使用。
 
-至此，`immer`的常用功能和 api 我们就介绍完了，更多说明，请移步[官方文档](https://github.com/mweststrate/immer)
+
+至此，`immer`的常用功能和 api 我们就介绍完了。
 
 接下来，我们看下使用`immer`，如何提高`react`、`redux`项目的开发效率。
 
-## immer在react项目中的应用
+## 用immer优化react项目的探索
+
+既然`immer`这么好用，那么是否可以在`react`项目中大展身手呢，答案是肯定的。
+
 
 
 
@@ -301,3 +315,9 @@ console.log('state4', state); // { x: 1, y: 2 }
 
 
 ## immer源码分析
+
+
+## 参考文档
+
+- [官方文档](https://github.com/mweststrate/immer)
+- [Introducing Immer: Immutability the easy way](https://hackernoon.com/introducing-immer-immutability-the-easy-way-9d73d8f71cb3)
