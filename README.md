@@ -11,6 +11,7 @@ Immer 极易上手，常用 api 就那么几个，使用方式也非常舒服，
 ## 以往,关于数据处理,有哪些不爽的地方
 
 先定义一个初始对象，供后面例子使用：
+首先定义一个`currentState`对象，后面的例子使用到变量`currentState`时，如无特殊声明，都是指这个`currentState`对象
 ```javascript
 let currentState = {
   p: {
@@ -100,19 +101,19 @@ Immer 涉及概念不多，在此将涉及到的概念先行罗列出来，阅�
   被操作对象的最初状态
 
 - draftState  
-  根据`currentState`生成的草稿状态，它是`currentState`的代理，对`draftState`所做的任何修改都将被记录并用于生成`nextState`。在此过程中，`currentState`将不受影响
+  根据 currentState 生成的草稿状态，它是 currentState 的代理，对 draftState 所做的任何修改都将被记录并用于生成 nextState 。在此过程中，currentState 将不受影响
 
 - nextState  
-  根据`draftState`生成的最终状态
+  根据 draftState 生成的最终状态
 
 - produce 生产  
-  用来生成`nextState`或`producer`的函数
+  用来生成 nextState 或 producer 的函数
 
 - producer 生产者  
-  通过`produce`生成，用来生产`nextState`，每次执行相同的操作
+  通过 produce 生成，用来生产 nextState ，每次执行相同的操作
 
 - recipe 生产机器  
-  用来操作`draftState`的函数
+  用来操作 draftState 的函数
 
 
 ### 常用api介绍
@@ -156,14 +157,14 @@ currentState.a === nextState.a; // false
 currentState.p === nextState.p; // true
 ```
 
-由此可见，对`draftState`的修改都会反应到`nextState`上，而 Immer 使用的结构是共享的，`nextState`在结构上又与`currentState`共享未修改的部分，共享效果如图(借用的一篇 Immutable 文章中的动图，侵删)：
+由此可见，对 draftState 的修改都会反应到 nextState 上，而 Immer 使用的结构是共享的，nextState 在结构上又与 currentState 共享未修改的部分，共享效果如图(借用的一篇 Immutable 文章中的动图，侵删)：
 
 ![](./assets/change-tree.gif)
 
 ##### 自动冻结功能
 
-Immer 还在内部做了一件很巧妙的事情，那就是通过`produce`生成的`nextState`是被冻结（freeze）的，（Immer 内部使用`Object.freeze`方法，只冻结`nextState`跟`currentState`相比修改的部分），这样，当直接修改`nextState`时，将会报错。
-这使得`nextState`成为了真正的不可变数据。
+Immer 还在内部做了一件很巧妙的事情，那就是通过 produce 生成的 nextState 是被冻结（freeze）的，（Immer 内部使用`Object.freeze`方法，只冻结 nextState 跟 currentState 相比修改的部分），这样，当直接修改 nextState 时，将会报错。
+这使得 nextState 成为了真正的不可变数据。
 
 例子：
 ```typescript
@@ -176,7 +177,7 @@ currentState === nextState; // true
 
 ##### 第2种使用方式
 
-利用高阶函数的特点，提前生成一个生产者`producer`
+利用高阶函数的特点，提前生成一个生产者 producer
 
 语法：
 `produce(recipe: (draftState) => void | draftState, ?PatchListener)(currentState): nextState`
@@ -192,9 +193,9 @@ let nextState = producer(currentState);
 
 ##### recipe的返回值
 
-`recipe`是否有返回值，`nextState`的生成过程是不同的：  
-`recipe`没有返回值时：`nextState`根据`recipe`函数内的`draftState`生成的；  
-`recipe`有返回值时：`nextState`根据`recipe`函数的返回值生成的；  
+recipe 是否有返回值，nextState 的生成过程是不同的：  
+recipe 没有返回值时：nextState 根据 recipe 函数内的 draftState 生成的；  
+recipe 有返回值时：nextState 根据 recipe 函数的返回值生成的；  
 
 ```typescript
 let nextState = produce(
@@ -207,14 +208,12 @@ let nextState = produce(
 )
 ```
 
-此时，`nextState`不再是通过`draftState`生成的了，而是通过`recipe`的返回值生成的。
-
-*注意，`recipe`无返回值时，通过`produce`生成的`nextState`是  freeze（冻结）的，不可被修改的*
+此时，nextState 不再是通过 draftState 生成的了，而是通过 recipe 的返回值生成的。
 
 ##### recipe中的this
 
-`recipe`函数内部的`this`指向`draftState`，也就是修改`this`与修改`recipe`的参数`draftState`，效果是一样的。  
-!!注意：此处的`recipe`函数不能是箭头函数，如果是箭头函数，`this`就无法指向`draftState`了。
+ recipe 函数内部的`this`指向 draftState ，也就是修改`this`与修改 recipe 的参数 draftState ，效果是一样的。  
+**注意：此处的 recipe 函数不能是箭头函数，如果是箭头函数，`this`就无法指向 draftState 了**
 
 ```javascript
 produce(currentState, function(draft){
@@ -225,7 +224,7 @@ produce(currentState, function(draft){
 
 #### patch补丁功能
 
-通过此功能，可以方便进行详细的代码调试和跟踪，可以知道`recipe`内的做的每次修改，还可以实现时间旅行。
+通过此功能，可以方便进行详细的代码调试和跟踪，可以知道 recipe 内的做的每次修改，还可以实现时间旅行。
 
 Immer 中，一个 patch 对象是这样的:
 ```typescript
@@ -335,14 +334,44 @@ console.log('state4', state); // { x: 1, y: 2 }
 
 既然 Immer 这么好用，那么是否可以在 React 项目中大展身手呢，答案是肯定的。
 
+在开始正式探索之前，我们先来看下 produce [第2种使用方式](#第2种使用方式)的拓展用法:
+
+例子：
+```typescript
+let obj = {};
+
+let producer = produce((draft, arg) => {
+  obj === arg; // true
+});
+let nextState = producer(currentState, obj);
+```
+
+相比 produce 第2种使用方式的例子，多定义了一个`obj`对象，并将其作为 producer 方法的第2个参数传了进去；可以看到， produce 内的 recipe 回调函数的第2个参数与`obj`对象是指向同一块内存。  
+ok，我们在知道了 produce 的这种拓展用法后，看看能够在 React 中发挥什么功效。
+
+### 优化setState方法
+
+先简单回顾下，`setState`方法在 React 中的使用：  
+
+首先定义一个`state`对象，后面的例子使用到变量`state`或访问`this.state`时，如无特殊声明，都是指这个`state`对象
+```typescript
+state = {
+  members: [
+    {
+      name: 'ronffy',
+      age: 30
+    }
+  ]
+}
+```
+
+```typescript
+
+```
 
 
+### 优化reducer
 
-
-## 从零实现immer
-
-
-## immer源码分析
 
 
 ## 参考文档

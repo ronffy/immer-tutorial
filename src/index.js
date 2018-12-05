@@ -1,3 +1,4 @@
+import React from 'react';
 import produce, { applyPatches } from 'immer';
 
 
@@ -50,16 +51,15 @@ let target2 = {
   }
 }
 
-let p;
+let p = {}
 
-let o1 = produce(target2, function (draft){
-  // let a = draft.p;
-  // p = a;
-  // return a ;
-  console.log(draft === this);
-  
-  draft.p.x = 2;
+let producer = produce(function (draft, arg){
+  console.log('p:', p === arg);
 })
+
+let o2 = producer(target2, p);
+
+
 
 
 
@@ -105,4 +105,59 @@ let o1 = produce(target2, function (draft){
 
   state = applyPatches(state, inverseRemoves);
   console.log('state4', state);
+}
+
+
+class C extends React.Component {
+  state = {
+    members: [
+      {
+        name: 'ronffy',
+        age: 30
+      }
+    ]
+  }
+  componentDidMount() {
+
+    // members 成员中的第1个人，年龄长了1岁：
+
+    this.state.members[0].age++; // 错误的写法，任何时候，不可以直接修改state
+
+
+    // 第1种写法：
+    const { members } = this.state;
+    this.setState({
+      members: [
+        {
+          ...members[0],
+          age: members[0].age + 1,
+        },
+        ...members,
+      ]
+    })
+
+
+    // 第2种写法：
+    this.setState(state => {
+      const { members } = state;
+      return {
+        members: [
+          {
+            ...members[0],
+            age: members[0].age + 1,
+          },
+          ...members
+        ]
+      }
+    })
+
+    
+
+
+  }
+  render() {
+    return (
+      <div></div>
+    )
+  }
 }
