@@ -5,6 +5,21 @@
 [Immer](https://github.com/mweststrate/immer) 是 mobx 的作者写的一个 immutable 库，核心实现是利用 ES6 的 proxy，几乎以最小的成本实现了 js 的不可变数据结构，解决了许多日常开发中的棘手问题。   
 Immer 极易上手，常用 api 就那么几个，使用方式也非常舒服，相信你一定会喜欢上它的。
 
+## 目录
+
+-   [数据处理存在的问题](#数据处理存在的问题)
+-   [解决引用类型对象被修改的办法](#解决引用类型对象被修改的办法)
+-   [immer功能介绍](#immer功能介绍)
+    - [安装immer](#安装immer)
+    - [immer如何fix掉那些不爽的问题](#immer如何fix掉那些不爽的问题)
+    - [概念说明](#概念说明)
+    - [常用api介绍](#常用api介绍)
+-   [用immer优化react项目的探索](#用immer优化react项目的探索)
+    - [抛出需求](#抛出需求)
+    - [优化setState方法](#优化setState方法)
+    - [优化reducer](#优化reducer)
+-   [参考文档](#参考文档)
+
 ## 数据处理存在的问题
 
 先定义一个初始对象，供后面例子使用：
@@ -43,9 +58,7 @@ let o4 = currentState;
 o4.p.x.push(1); // currentState 被修改了
 ```
 
-## immer功能介绍
-
-### 一般情况下,解决引用类型对象被修改的办法
+## 解决引用类型对象被修改的办法
 
 1. 深度拷贝，但是深拷贝的成本较高，会影响性能；
 2. [ImmutableJS](https://github.com/facebook/immutable-js)，非常棒的一个不可变数据结构的库，可以解决上面的问题，But，跟 Immer 比起来，ImmutableJS 有两个较大的不足：  
@@ -53,6 +66,8 @@ o4.p.x.push(1); // currentState 被修改了
   - 它的操作结果需要通过`toJS`方法才能得到原生对象，这使得在操作一个对象的时候，时刻要主要操作的是原生对象还是 ImmutableJS 的返回结果，稍不注意，就会产生意想不到的 bug。
 
 看来目前已知的解决方案，我们都不甚满意，那么 Immer 又有什么高明之处呢？
+
+## immer功能介绍
 
 ### 安装immer
 
