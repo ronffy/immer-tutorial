@@ -1,4 +1,9 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
+
+import { createStore } from 'redux';
+import { connect } from 'react-redux';
+
 import produce, { applyPatches } from 'immer';
 
 
@@ -107,57 +112,27 @@ let o2 = producer(target2, p);
   console.log('state4', state);
 }
 
-
+// @connect
 class C extends React.Component {
-  state = {
-    members: [
-      {
-        name: 'ronffy',
-        age: 30
-      }
-    ]
-  }
-  componentDidMount() {
-
-    // members 成员中的第1个人，年龄长了1岁：
-
-    this.state.members[0].age++; // 错误的写法，任何时候，不可以直接修改state
-
-
-    // 第1种写法：
-    const { members } = this.state;
-    this.setState({
-      members: [
-        {
-          ...members[0],
-          age: members[0].age + 1,
-        },
-        ...members,
-      ]
-    })
-
-
-    // 第2种写法：
-    this.setState(state => {
-      const { members } = state;
-      return {
-        members: [
-          {
-            ...members[0],
-            age: members[0].age + 1,
-          },
-          ...members
-        ]
-      }
-    })
-
-    
-
-
-  }
   render() {
+    const { members } = this.props;
+    if (!members || !members.length) {
+      return null;
+    }
     return (
-      <div></div>
+      <div>
+        {
+          members.map(({ name, age }) => <span key={age}>{name}: {age}</span>)
+        }
+      </div>
     )
   }
 }
+
+
+
+
+ReactDOM.render(
+  <C />,
+  document.getElementById('root')
+)

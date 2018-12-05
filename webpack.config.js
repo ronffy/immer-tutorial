@@ -56,12 +56,17 @@ module.exports = function (err) {
               presets: [
                 [
                   '@babel/preset-env',
-                  {
-                    modules: false, // 保留es6模块化的语句，为了tree shaking
-                  },
+                  // {
+                  //   modules: false, // 保留es6模块化的语句，为了tree shaking
+                  // },
+                ],
+                [
+                  '@babel/preset-react',
                 ]
               ],
               plugins: [
+                ["@babel/plugin-proposal-decorators", { "legacy": true }],
+                ["@babel/plugin-proposal-class-properties", { "loose": true }],
                 [
                   '@babel/plugin-transform-runtime',
                   {

@@ -64,7 +64,7 @@ npm i --save immer
 ### immer如何fix掉那些不爽的问题
 
 Fix Q1、Q3
-```javascript
+```js
 import produce from 'immer';
 let o1 = produce(currentState, draft => {
   draft.p.x = 1;
@@ -72,7 +72,7 @@ let o1 = produce(currentState, draft => {
 ```
 
 Fix Q2
-```javascript
+```js
 import produce from 'immer';
 fn(currentState); // currentState 被修改了
 function fn(o) {
@@ -83,7 +83,7 @@ function fn(o) {
 ```
 
 Fix Q4
-```javascript
+```js
 import produce from 'immer';
 let o4 = produce(currentState, draft => {
   draft.p.x.push(1);
@@ -132,7 +132,7 @@ or
 `produce(currentState, recipe: (draftState) => void | draftState, ?PatchListener): nextState`
 
 例子1：
-```typescript
+```js
 let nextState = produce(currentState, (draft) => {
 
 })
@@ -141,7 +141,7 @@ currentState === nextState; // true
 ```
 
 例子2：
-```typescript
+```js
 let currentState = {
   a: [],
   p: {
@@ -167,7 +167,7 @@ Immer 还在内部做了一件很巧妙的事情，那就是通过 produce 生�
 这使得 nextState 成为了真正的不可变数据。
 
 例子：
-```typescript
+```js
 let nextState = produce(currentState, (draft) => {
   draft.p.x.push(2);
 })
@@ -183,7 +183,7 @@ currentState === nextState; // true
 `produce(recipe: (draftState) => void | draftState, ?PatchListener)(currentState): nextState`
 
 例子：
-```typescript
+```js
 let producer = produce((draft) => {
   draft.x = 2
 });
@@ -197,7 +197,7 @@ recipe 是否有返回值，nextState 的生成过程是不同的：
 recipe 没有返回值时：nextState 根据 recipe 函数内的 draftState 生成的；  
 recipe 有返回值时：nextState 根据 recipe 函数的返回值生成的；  
 
-```typescript
+```js
 let nextState = produce(
   currentState, 
   (draftState) => {
@@ -215,7 +215,7 @@ let nextState = produce(
  recipe 函数内部的`this`指向 draftState ，也就是修改`this`与修改 recipe 的参数 draftState ，效果是一样的。  
 **注意：此处的 recipe 函数不能是箭头函数，如果是箭头函数，`this`就无法指向 draftState 了**
 
-```javascript
+```js
 produce(currentState, function(draft){
   // 此处，this 指向 draftState
   draft === this; // true
@@ -249,7 +249,7 @@ applyPatches(currentState, changes: (patches | inversePatches)[]): nextState
 
 例子：
 
-```typescript
+```js
 import produce, { applyPatches } from "immer"
 
 let state = {
@@ -286,14 +286,13 @@ console.log('state3', state); // { x: 4, y: 2 }
 
 state = applyPatches(state, inverseReplaces);
 console.log('state4', state); // { x: 1, y: 2 }
-
 ```
 
 `state.x`的值4次打印结果分别是：`3、2、4、1`，实现了时间旅行，
 可以分别打印`patches`和`inversePatches`看下，
 
 `patches`数据如下：
-```javascript
+```js
 [
   {
     op: "replace",
@@ -309,7 +308,7 @@ console.log('state4', state); // { x: 1, y: 2 }
 ```
 
 `inversePatches`数据如下：
-```javascript
+```js
 [
   {
     op: "replace",
@@ -337,7 +336,7 @@ console.log('state4', state); // { x: 1, y: 2 }
 在开始正式探索之前，我们先来看下 produce [第2种使用方式](#第2种使用方式)的拓展用法:
 
 例子：
-```typescript
+```js
 let obj = {};
 
 let producer = produce((draft, arg) => {
@@ -351,10 +350,12 @@ ok，我们在知道了 produce 的这种拓展用法后，看看能够在 React
 
 ### 优化setState方法
 
+#### 回顾setState
+
 先简单回顾下，`setState`方法在 React 中的使用：  
 
 首先定义一个`state`对象，后面的例子使用到变量`state`或访问`this.state`时，如无特殊声明，都是指这个`state`对象
-```typescript
+```js
 state = {
   members: [
     {
@@ -365,12 +366,65 @@ state = {
 }
 ```
 
-```typescript
+#### 抛出需求
 
+就这个`state`，我们先抛一个需求出来，好让后面的讲解有的放矢： *members 成员中的第1个成员，年龄长了1岁*
+
+#### 错误示例
+
+```js
+this.state.members[0].age++;
+```
+只所以有的新手同学会犯这样的错误，很大原因是这样操作实在是太方便了，以至于忘记了操作 State 的规则。
+
+下面看下正确的实现方法
+
+#### setState的第1种实现方法
+
+```js
+const { members } = this.state;
+this.setState({
+  members: [
+    {
+      ...members[0],
+      age: members[0].age + 1,
+    },
+    ...members.slice(1),
+  ]
+})
 ```
 
+#### setState的第2种实现方法
+
+```js
+this.setState(state => {
+  const { members } = state;
+  return {
+    members: [
+      {
+        ...members[0],
+        age: members[0].age + 1,
+      },
+      ...members.slice(1)
+    ]
+  }
+})
+```
+
+以上2种实现方式，就是`setState`的两种使用方法，相比大家都不陌生了，所以就不过多说明了，接下来看下，如果用 Immer 解决，会有怎样的烟火？
+
+#### 用immer更新state
+
+```js
+this.setState(produce(draft => {
+  draft.members[0].age++;
+}))
+```
+
+是不是瞬间代码量就少了很多，阅读起来舒服了很多，而且更易于阅读了。
 
 ### 优化reducer
+
 
 
 

@@ -24,8 +24,11 @@
   "homepage": "https://github.com/ronffy/immer-tutorial#readme",
   "devDependencies": {
     "@babel/core": "^7.1.6",
+    "@babel/plugin-proposal-class-properties": "^7.2.1",
+    "@babel/plugin-proposal-decorators": "^7.2.0",
     "@babel/plugin-transform-runtime": "^7.1.0",
     "@babel/preset-env": "^7.1.6",
+    "@babel/preset-react": "^7.0.0",
     "@babel/runtime-corejs2": "^7.1.5",
     "babel-loader": "^8.0.4",
     "copy-webpack-plugin": "^4.6.0",
@@ -54,6 +57,7 @@
     "immer": "^1.8.0",
     "react": "^16.6.3",
     "react-dom": "^16.6.3",
-    "react-router-redux": "^4.0.8"
+    "react-redux": "^6.0.0",
+    "redux": "^4.0.1"
   }
 }
