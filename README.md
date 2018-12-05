@@ -1,8 +1,8 @@
 # Immer 中文文档
 
-## 介绍
+## 前言
 
-[Immer](https://github.com/mweststrate/immer) 是 mobx 的作者写的一个 immutable 库，核心实现是利用 ES6 的 proxy。  
+[Immer](https://github.com/mweststrate/immer) 是 mobx 的作者写的一个 immutable 库，核心实现是利用 ES6 的 proxy，几乎以最小的成本实现了 js 的不可变数据结构，解决了许多日常开发中的棘手问题。   
 Immer 极易上手，常用 api 就那么几个，使用方式也非常舒服，相信你一定会喜欢上它的。
 
 ## 以往,关于数据处理,有哪些不爽的地方
