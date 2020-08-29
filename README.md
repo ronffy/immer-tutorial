@@ -191,12 +191,19 @@ Immer 还在内部做了一件很巧妙的事情，那就是通过 produce 生�
 这使得 nextState 成为了真正的不可变数据。
 
 例子：
-```js
-let nextState = produce(currentState, (draft) => {
-  draft.p.x.push(2);
-})
-
-currentState === nextState; // true
+```ts
+const currentState = {
+  p: {
+    x: [2],
+  },
+}
+const nextState = produce(currentState, draftState => {
+    draftState.p.x.push(3);
+});
+console.log(nextState.p.x); // [2, 3]
+nextState.p.x = 4;
+console.log(nextState.p.x); // [2, 3]
+nextState.p.x.push(5); // 报错
 ```
 
 ##### 第2种使用方式
