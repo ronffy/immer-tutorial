@@ -190,13 +190,13 @@ currentState.p === nextState.p; // true
 Immer 还在内部做了一件很巧妙的事情，那就是通过 produce 生成的 nextState 是被冻结（freeze）的，（Immer 内部使用`Object.freeze`方法，只冻结 nextState 跟 currentState 相比修改的部分），这样，当直接修改 nextState 时，将会报错。
 这使得 nextState 成为了真正的不可变数据。
 
-例子：
+示例：
 ```ts
 const currentState = {
   p: {
     x: [2],
   },
-}
+};
 const nextState = produce(currentState, draftState => {
     draftState.p.x.push(3);
 });
